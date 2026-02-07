@@ -575,34 +575,17 @@
         //    }
         
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+  apiKey: "AIzaSyBgqReemhXcBh412fPOA2LPEF21h426k7U",
+  authDomain: "sb-auction.firebaseapp.com",
+  projectId: "sb-auction",
+  storageBucket: "sb-auction.firebasestorage.app",
+  messagingSenderId: "443013566726",
+  appId: "1:443013566726:web:4bd4ec15e26a2e3ce38e87"
+};
 
-        // Initialize Firebase
-        let database = null;
-        let roomRef = null;
-        let isFirebaseConfigured = false;
-
-        try {
-            // Check if config has been updated
-            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-                firebase.initializeApp(firebaseConfig);
-                database = firebase.database();
-                isFirebaseConfigured = true;
-                console.log("Firebase initialized successfully!");
-            } else {
-                console.warn("Firebase not configured. Using local-only mode. See instructions in code.");
-            }
-        } catch (error) {
-            console.error("Firebase initialization failed:", error);
-            isFirebaseConfigured = false;
-        }
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+       
 
         // Global state
         const state = {
