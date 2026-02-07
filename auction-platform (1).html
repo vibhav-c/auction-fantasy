@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Auction Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', 'Quicksand', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .setup-screen, .waiting-screen, .auction-screen, .end-screen {
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #4a5568;
+            font-size: 1.1em;
+        }
+
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .item-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .item-tag {
+            background: #edf2f7;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .item-tag .remove {
+            cursor: pointer;
+            color: #e53e3e;
+            font-weight: 700;
+            transition: transform 0.2s;
+        }
+
+        .item-tag .remove:hover {
+            transform: scale(1.2);
+        }
+
+        .auction-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            min-height: calc(100vh - 200px);
+            padding-bottom: 50vh;
+        }
+
+        .auction-main-content {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 30px;
+        }
+
+        .roster-panel {
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .roster-panel h3 {
+            margin-bottom: 15px;
+            color: #5a67d8;
+            font-size: 1.3em;
+        }
+
+        .player-roster {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .player-roster h4 {
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-size: 1.1em;
+        }
+
+        .player-roster .balance {
+            color: #805ad5;
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+
+        .roster-items {
+            font-size: 0.95em;
+            color: #4a5568;
+        }
+
+        .roster-items div {
+            padding: 4px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .roster-items div:last-child {
+            border-bottom: none;
+        }
+
+        .main-auction {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .current-item-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .current-item-display h2 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .current-bid {
+            font-size: 1.8em;
+            margin-top: 20px;
+            font-weight: 700;
+        }
+
+        .timer {
+            font-size: 3em;
+            font-weight: 800;
+            margin: 20px 0;
+            color: #ffd700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .timer.warning {
+            color: #fc8181;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .bidding-controls {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .slider-container {
+            margin: 25px 0;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #4a5568;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #5a67d8;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .bid-amount-display {
+            text-align: center;
+            font-size: 2em;
+            font-weight: 800;
+            color: #5a67d8;
+            margin: 20px 0;
+        }
+
+        .nomination-phase {
+            background: #fff5f5;
+            border: 3px solid #fc8181;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .nomination-phase h3 {
+            color: #c53030;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .item-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .item-selector-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .item-selector-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .chat-panel {
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-panel h3 {
+            margin-bottom: 15px;
+            color: #5a67d8;
+            font-size: 1.3em;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            max-height: 500px;
+        }
+
+        .chat-message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: #edf2f7;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+        .chat-message .sender {
+            font-weight: 700;
+            color: #5a67d8;
+            margin-bottom: 3px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-container input {
+            flex: 1;
+        }
+
+        .chat-input-container button {
+            padding: 12px 20px;
+        }
+
+        .end-screen-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .player-final-box {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 16px;
+            padding: 25px;
+            border: 3px solid #5a67d8;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-final-box h3 {
+            color: #5a67d8;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #5a67d8;
+            padding-bottom: 10px;
+        }
+
+        .final-roster-item {
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .final-roster-item .item-name {
+            font-weight: 600;
+        }
+
+        .final-roster-item .item-cost {
+            color: #805ad5;
+            font-weight: 700;
+        }
+
+        .waiting-screen {
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .waiting-screen h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #5a67d8;
+        }
+
+        .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .player-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .room-code {
+            background: #ffd700;
+            color: #2d3748;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-size: 1.5em;
+            font-weight: 800;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .secondary-btn {
+            background: #e2e8f0;
+            color: #2d3748;
+            margin-left: 10px;
+        }
+
+        .secondary-btn:hover {
+            background: #cbd5e0;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .status-message {
+            background: #c6f6d5;
+            border: 2px solid #48bb78;
+            color: #22543d;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        .bid-history {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+
+        .import-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .import-buttons button {
+            flex: 1;
+        }
+
+        .single-bid-indicator {
+            background: #fef5e7;
+            border: 2px solid #f39c12;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+            color: #d68910;
+        }
+
+        .submitted-bid-indicator {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 700;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⭐ Live Auction Platform ⭐</h1>
+            <p id="headerSubtitle">Real-time bidding experience</p>
+            <p id="multiplayerStatus" style="font-size: 0.9em; margin-top: 10px; opacity: 0.9;"></p>
+        </div>
+        <div class="content" id="app">
+            <!-- Content will be dynamically inserted -->
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase configuration - YOU NEED TO REPLACE THIS WITH YOUR OWN FIREBASE CONFIG
+        // Instructions:
+        // 1. Go to https://console.firebase.google.com/
+        // 2. Create a new project (or use existing)
+        // 3. Add a web app to your project
+        // 4. Copy the firebaseConfig object and paste it below
+        // 5. Enable Realtime Database in your Firebase console
+        // 6. Set database rules to allow read/write for testing:
+        //    {
+        //      "rules": {
+        //        ".read": true,
+        //        ".write": true
+        //      }
+        //    }
+        
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        let database = null;
+        let roomRef = null;
+        let isFirebaseConfigured = false;
+
+        try {
+            // Check if config has been updated
+            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                isFirebaseConfigured = true;
+                console.log("Firebase initialized successfully!");
+            } else {
+                console.warn("Firebase not configured. Using local-only mode. See instructions in code.");
+            }
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            isFirebaseConfigured = false;
+        }
+
+        // Global state
+        const state = {
+            role: null, // 'manager' or 'player'
+            roomCode: null,
+            playerName: null,
+            managerName: null,
+            startingCurrency: 100,
+            auctionType: 'multiple', // 'multiple' or 'single'
+            bidTimer: 30,
+            nominationTimer: 60,
+            items: [],
+            players: [],
+            currentPhase: 'setup', // 'setup', 'waiting', 'nominating', 'bidding', 'ended'
+            currentItem: null,
+            currentNominatorIndex: 0,
+            currentBid: 0,
+            currentBidder: null,
+            timeRemaining: 0,
+            playerCurrency: {},
+            playerRosters: {},
+            nominatedItems: [],
+            chatMessages: [],
+            singleBidSubmissions: {}, // For single-bid auction
+            mySubmittedBid: null // Track player's submitted bid
+        };
+
+        let timerInterval = null;
+
+        // Firebase sync functions
+        function setupFirebaseListeners() {
+            if (!isFirebaseConfigured || !roomRef) return;
+            
+            roomRef.on('value', (snapshot) => {
+                if (!snapshot.exists()) return;
+                
+                const roomData = snapshot.val();
+                const oldPhase = state.currentPhase;
+                
+                // Update local state
+                state.players = roomData.players || [];
+                state.playerCurrency = roomData.playerCurrency || {};
+                state.playerRosters = roomData.playerRosters || {};
+                state.currentPhase = roomData.currentPhase || 'waiting';
+                state.chatMessages = roomData.chatMessages || [];
+                state.currentNominatorIndex = roomData.currentNominatorIndex || 0;
+                state.nominatedItems = roomData.nominatedItems || [];
+                state.currentItem = roomData.currentItem;
+                state.currentBid = roomData.currentBid || 0;
+                state.currentBidder = roomData.currentBidder;
+                state.singleBidSubmissions = roomData.singleBidSubmissions || {};
+                
+                // Re-render current screen if data changed
+                if (state.currentPhase === 'waiting') {
+                    showWaitingRoom();
+                } else if (state.currentPhase === 'nominating' && oldPhase !== 'nominating') {
+                    showNominationPhase();
+                } else if (state.currentPhase === 'bidding' && oldPhase !== 'bidding') {
+                    showBiddingPhase();
+                } else if (state.currentPhase === 'ended' && oldPhase !== 'ended') {
+                    endAuction();
+                } else if (state.currentPhase === oldPhase && state.currentPhase !== 'ended') {
+                    // Just update the display without changing screens
+                    updateCurrentDisplay();
+                }
+            });
+        }
+
+        function updateCurrentDisplay() {
+            // Update display elements without full re-render
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages && state.chatMessages.length > 0) {
+                chatMessages.innerHTML = state.chatMessages.map(msg => `
+                    <div class="chat-message">
+                        <div class="sender">${msg.sender}</div>
+                        <div>${msg.message}</div>
+                    </div>
+                `).join('');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        function loadStateFromFirebase() {
+            if (state.currentPhase === 'nominating') {
+                showNominationPhase();
+            } else if (state.currentPhase === 'bidding') {
+                showBiddingPhase();
+            }
+        }
+
+        function syncToFirebase() {
+            if (!isFirebaseConfigured || !roomRef) return;
+            
+            roomRef.update({
+                players: state.players,
+                playerCurrency: state.playerCurrency,
+                playerRosters: state.playerRosters,
+                currentPhase: state.currentPhase,
+                chatMessages: state.chatMessages,
+                currentNominatorIndex: state.currentNominatorIndex,
+                nominatedItems: state.nominatedItems,
+                currentItem: state.currentItem,
+                currentBid: state.currentBid,
+                currentBidder: state.currentBidder,
+                singleBidSubmissions: state.singleBidSubmissions,
+                timeRemaining: state.timeRemaining
+            });
+        }
+
+        // Initialize
+        function init() {
+            const statusEl = document.getElementById('multiplayerStatus');
+            if (statusEl) {
+                if (isFirebaseConfigured) {
+                    statusEl.textContent = '✓ Multiplayer enabled';
+                    statusEl.style.color = '#48bb78';
+                } else {
+                    statusEl.textContent = '⚠️ Local mode only - See code comments for multiplayer setup';
+                    statusEl.style.color = '#f6ad55';
+                }
+            }
+            showRoleSelection();
+        }
+
+        // Role selection
+        function showRoleSelection() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="setup-screen">
+                    <h2 style="text-align: center; margin-bottom: 30px; font-size: 2em; color: #5a67d8;">Choose Your Role</h2>
+                    <div style="display: flex; gap: 20px; justify-content: center;">
+                        <button onclick="selectRole('manager')" style="padding: 40px 60px; font-size: 1.3em;">
+                            Create Auction<br>(Manager)
+                        </button>
+                        <button onclick="selectRole('player')" style="padding: 40px 60px; font-size: 1.3em;">
+                            Join Auction<br>(Player)
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectRole(role) {
+            state.role = role;
+            if (role === 'manager') {
+                showManagerSetup();
+            } else {
+                showPlayerJoin();
+            }
+        }
+
+        // Manager setup
+        function showManagerSetup() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="setup-screen">
+                    <h2 style="margin-bottom: 30px; font-size: 2em; color: #5a67d8;">Auction Setup</h2>
+                    
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <input type="text" id="managerName" placeholder="Enter your name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Starting Currency (per player)</label>
+                        <input type="number" id="startingCurrency" value="100" min="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Auction Type</label>
+                        <select id="auctionType" onchange="updateTimerLabel()">
+                            <option value="multiple">Multiple-bid Auction</option>
+                            <option value="single">Single-bid Auction</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="bidTimerLabel">Bidding Timer (per bid reset, seconds)</label>
+                        <input type="number" id="bidTimer" value="30" min="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nomination Timer (seconds)</label>
+                        <input type="number" id="nominationTimer" value="60" min="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Add Items</label>
+                        <input type="text" id="itemInput" placeholder="Enter item name and press Enter" 
+                               onkeypress="if(event.key==='Enter'){event.preventDefault();addItem();}">
+                        <button onclick="addItem()" style="margin-top: 10px;">Add Item</button>
+                        
+                        <div class="import-buttons">
+                            <button onclick="showImportModal('comma')">Import Comma-Separated</button>
+                            <button onclick="showImportModal('lines')">Import Line-Separated</button>
+                        </div>
+                        
+                        <div class="item-list" id="itemList"></div>
+                    </div>
+
+                    <button onclick="createRoom()" style="margin-top: 20px; width: 100%;">Create Auction Room</button>
+                    <button onclick="showRoleSelection()" class="secondary-btn" style="width: 100%; margin-top: 10px;">Back</button>
+                </div>
+            `;
+        }
+
+        function updateTimerLabel() {
+            const auctionType = document.getElementById('auctionType').value;
+            const label = document.getElementById('bidTimerLabel');
+            if (auctionType === 'multiple') {
+                label.textContent = 'Bidding Timer (per bid reset, seconds)';
+            } else {
+                label.textContent = 'Bidding Timer (fixed per item, seconds)';
+            }
+        }
+
+        function addItem() {
+            const input = document.getElementById('itemInput');
+            const itemName = input.value.trim();
+            if (itemName && !state.items.includes(itemName)) {
+                state.items.push(itemName);
+                input.value = '';
+                updateItemList();
+            }
+        }
+
+        function removeItem(index) {
+            state.items.splice(index, 1);
+            updateItemList();
+        }
+
+        function updateItemList() {
+            const itemList = document.getElementById('itemList');
+            itemList.innerHTML = state.items.map((item, index) => `
+                <div class="item-tag">
+                    ⭐ ${item}
+                    <span class="remove" onclick="removeItem(${index})">×</span>
+                </div>
+            `).join('');
+        }
+
+        function showImportModal(type) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+            
+            const title = type === 'comma' ? 'Paste Comma-Separated Items' : 'Paste Line-Separated Items (one per line)';
+            const placeholder = type === 'comma' ? 'Item 1, Item 2, Item 3' : 'Item 1\nItem 2\nItem 3';
+            
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 90%;">
+                    <h3 style="margin-bottom: 20px; color: #5a67d8;">${title}</h3>
+                    <textarea id="importTextarea" placeholder="${placeholder}" 
+                              style="width: 100%; min-height: 150px; padding: 12px; border: 2px solid #e2e8f0; 
+                              border-radius: 8px; font-family: inherit; font-size: 1em;"></textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button onclick="processImport('${type}')" style="flex: 1;">Import</button>
+                        <button onclick="closeImportModal()" class="secondary-btn" style="flex: 1;">Cancel</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            modal.id = 'importModal';
+            document.getElementById('importTextarea').focus();
+        }
+
+        function processImport(type) {
+            const textarea = document.getElementById('importTextarea');
+            const input = textarea.value.trim();
+            
+            if (input) {
+                let items;
+                if (type === 'comma') {
+                    items = input.split(',').map(i => i.trim()).filter(i => i);
+                } else {
+                    items = input.split('\n').map(i => i.trim()).filter(i => i);
+                }
+                
+                items.forEach(item => {
+                    if (!state.items.includes(item)) {
+                        state.items.push(item);
+                    }
+                });
+                updateItemList();
+            }
+            
+            closeImportModal();
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('importModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function createRoom() {
+            const managerName = document.getElementById('managerName').value.trim();
+            const startingCurrency = parseInt(document.getElementById('startingCurrency').value);
+            const auctionType = document.getElementById('auctionType').value;
+            const bidTimer = parseInt(document.getElementById('bidTimer').value);
+            const nominationTimer = parseInt(document.getElementById('nominationTimer').value);
+
+            // Validation
+            if (!managerName) {
+                alert('Please enter your name.');
+                return;
+            }
+
+            if (!startingCurrency || startingCurrency < 1) {
+                alert('Please enter a valid starting currency amount.');
+                return;
+            }
+
+            if (!bidTimer || bidTimer < 5) {
+                alert('Please enter a valid bidding timer (minimum 5 seconds).');
+                return;
+            }
+
+            if (!nominationTimer || nominationTimer < 5) {
+                alert('Please enter a valid nomination timer (minimum 5 seconds).');
+                return;
+            }
+
+            if (state.items.length === 0) {
+                alert('Please add at least one item to auction.');
+                return;
+            }
+
+            state.managerName = managerName;
+            state.startingCurrency = startingCurrency;
+            state.auctionType = auctionType;
+            state.bidTimer = bidTimer;
+            state.nominationTimer = nominationTimer;
+            state.roomCode = generateRoomCode();
+            state.playerName = managerName;
+            state.players = [managerName];
+            state.role = 'manager';
+            
+            initializePlayerData();
+            
+            // Save to Firebase if configured
+            if (isFirebaseConfigured) {
+                roomRef = database.ref('rooms/' + state.roomCode);
+                roomRef.set({
+                    managerName: state.managerName,
+                    startingCurrency: state.startingCurrency,
+                    auctionType: state.auctionType,
+                    bidTimer: state.bidTimer,
+                    nominationTimer: state.nominationTimer,
+                    items: state.items,
+                    players: state.players,
+                    currentPhase: 'waiting',
+                    playerCurrency: state.playerCurrency,
+                    playerRosters: state.playerRosters,
+                    currentNominatorIndex: 0,
+                    nominatedItems: [],
+                    chatMessages: [],
+                    currentItem: null,
+                    currentBid: 0,
+                    currentBidder: null,
+                    singleBidSubmissions: {},
+                    timeRemaining: 0
+                });
+                
+                // Listen for changes
+                setupFirebaseListeners();
+            }
+            
+            showWaitingRoom();
+        }
+
+        function generateRoomCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+
+        function initializePlayerData() {
+            state.players.forEach(player => {
+                state.playerCurrency[player] = state.startingCurrency;
+                state.playerRosters[player] = [];
+            });
+        }
+
+        // Player join
+        function showPlayerJoin() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="setup-screen">
+                    <h2 style="margin-bottom: 30px; font-size: 2em; color: #5a67d8;">Join Auction</h2>
+                    
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <input type="text" id="playerNameInput" placeholder="Enter your name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Room Code</label>
+                        <input type="text" id="roomCodeInput" placeholder="Enter room code" style="text-transform: uppercase;">
+                    </div>
+
+                    <button onclick="joinRoom()" style="width: 100%;">Join Auction</button>
+                    <button onclick="showRoleSelection()" class="secondary-btn" style="width: 100%; margin-top: 10px;">Back</button>
+                </div>
+            `;
+        }
+
+        function joinRoom() {
+            const playerName = document.getElementById('playerNameInput').value.trim();
+            const roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+
+            if (!playerName) {
+                alert('Please enter your name.');
+                return;
+            }
+
+            if (!roomCode) {
+                alert('Please enter a room code.');
+                return;
+            }
+
+            state.playerName = playerName;
+            state.roomCode = roomCode;
+            state.role = 'player';
+
+            if (isFirebaseConfigured) {
+                roomRef = database.ref('rooms/' + roomCode);
+                
+                // Check if room exists
+                roomRef.once('value').then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const roomData = snapshot.val();
+                        
+                        // Load room configuration
+                        state.managerName = roomData.managerName;
+                        state.startingCurrency = roomData.startingCurrency;
+                        state.auctionType = roomData.auctionType;
+                        state.bidTimer = roomData.bidTimer;
+                        state.nominationTimer = roomData.nominationTimer;
+                        state.items = roomData.items;
+                        state.players = roomData.players || [];
+                        state.playerCurrency = roomData.playerCurrency || {};
+                        state.playerRosters = roomData.playerRosters || {};
+                        state.currentPhase = roomData.currentPhase || 'waiting';
+                        
+                        // Add player if not already in room
+                        if (!state.players.includes(playerName)) {
+                            state.players.push(playerName);
+                            state.playerCurrency[playerName] = state.startingCurrency;
+                            state.playerRosters[playerName] = [];
+                            
+                            // Update Firebase
+                            roomRef.update({
+                                players: state.players,
+                                playerCurrency: state.playerCurrency,
+                                playerRosters: state.playerRosters
+                            });
+                        }
+                        
+                        // Setup listeners
+                        setupFirebaseListeners();
+                        
+                        // Show appropriate screen based on phase
+                        if (state.currentPhase === 'waiting') {
+                            showWaitingRoom();
+                        } else if (state.currentPhase === 'nominating') {
+                            loadStateFromFirebase();
+                        } else if (state.currentPhase === 'bidding') {
+                            loadStateFromFirebase();
+                        }
+                    } else {
+                        alert('Room not found. Please check the room code.');
+                    }
+                }).catch((error) => {
+                    alert('Error joining room: ' + error.message);
+                });
+            } else {
+                // Local mode fallback
+                alert('Multiplayer requires Firebase configuration. See console for instructions.');
+            }
+        }
+
+        // Waiting room
+        function showWaitingRoom() {
+            const app = document.getElementById('app');
+            const isManager = state.role === 'manager';
+            
+            app.innerHTML = `
+                <div class="waiting-screen">
+                    <h2>Waiting Room</h2>
+                    <div class="room-code">Room Code: ${state.roomCode}</div>
+                    
+                    <h3 style="margin-top: 30px; color: #4a5568;">Players</h3>
+                    <div class="player-list">
+                        ${state.players.map(p => `<div class="player-badge">${p}</div>`).join('')}
+                    </div>
+
+                    <p style="margin: 20px 0; font-size: 1.1em; color: #4a5568;">
+                        Starting Currency: <strong>${state.startingCurrency} 💰</strong><br>
+                        Auction Type: <strong>${state.auctionType === 'multiple' ? 'Multiple-bid' : 'Single-bid'}</strong><br>
+                        Items to Auction: <strong>${state.items.length}</strong>
+                    </p>
+
+                    ${isManager ? `
+                        <button onclick="startAuction()" style="font-size: 1.2em; padding: 16px 40px; margin-top: 20px;">
+                            Start Auction
+                        </button>
+                    ` : `
+                        <p style="color: #718096; font-style: italic;">Waiting for manager to start the auction...</p>
+                    `}
+                </div>
+            `;
+        }
+
+        // Start auction
+        function startAuction() {
+            state.currentPhase = 'nominating';
+            state.currentNominatorIndex = 0;
+            
+            if (isFirebaseConfigured) {
+                syncToFirebase();
+            }
+            
+            showNominationPhase();
+        }
+
+        // Nomination phase
+        function showNominationPhase() {
+            const currentNominator = state.players[state.currentNominatorIndex];
+            const isMyTurn = currentNominator === state.playerName;
+            const availableItems = state.items.filter(item => !state.nominatedItems.includes(item));
+
+            if (availableItems.length === 0) {
+                endAuction();
+                return;
+            }
+
+            state.timeRemaining = state.nominationTimer;
+            startTimer();
+
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="auction-layout">
+                    <div class="auction-main-content">
+                        ${renderRosterPanel()}
+                        
+                        <div class="main-auction">
+                            <div class="nomination-phase">
+                                <h3>Nomination Phase</h3>
+                                <p style="font-size: 1.3em; margin-bottom: 15px;">
+                                    <strong>${currentNominator}</strong> is nominating
+                                </p>
+                                <div class="timer ${state.timeRemaining <= 10 ? 'warning' : ''}" id="timer">
+                                    ${state.timeRemaining}s
+                                </div>
+
+                                ${isMyTurn ? `
+                                    <p style="margin-bottom: 20px; color: #2d3748; font-weight: 600;">
+                                        Select an item to nominate:
+                                    </p>
+                                    <div class="item-selector">
+                                        ${availableItems.map(item => `
+                                            <div class="item-selector-item" onclick="nominateItem('${item.replace(/'/g, "\\'")}')">
+                                                ⭐ ${item}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : `
+                                    <p style="color: #718096;">Waiting for nomination...</p>
+                                `}
+                            </div>
+
+                            ${renderChat()}
+                        </div>
+
+                        ${renderChatPanel()}
+                    </div>
+                    
+                    ${renderFullRosterSection()}
+                </div>
+            `;
+        }
+
+        function nominateItem(itemName) {
+            clearInterval(timerInterval);
+            state.nominatedItems.push(itemName);
+            state.currentItem = itemName;
+            state.currentPhase = 'bidding';
+            
+            // Reset single-bid submissions
+            state.singleBidSubmissions = {};
+            state.mySubmittedBid = null;
+            
+            if (state.auctionType === 'multiple') {
+                const nominator = state.players[state.currentNominatorIndex];
+                state.currentBid = 1;
+                state.currentBidder = nominator;
+                state.playerCurrency[nominator] -= 1;
+            } else {
+                state.currentBid = 0;
+                state.currentBidder = null;
+            }
+            
+            if (isFirebaseConfigured) {
+                syncToFirebase();
+            }
+            
+            showBiddingPhase();
+        }
+
+        function autoNominate() {
+            const availableItems = state.items.filter(item => !state.nominatedItems.includes(item));
+            if (availableItems.length > 0) {
+                nominateItem(availableItems[0]);
+            }
+        }
+
+        // Bidding phase
+        function showBiddingPhase() {
+            state.timeRemaining = state.bidTimer;
+            startTimer();
+
+            renderBiddingScreen();
+        }
+
+        function renderBiddingScreen() {
+            const app = document.getElementById('app');
+            const isMultipleBid = state.auctionType === 'multiple';
+            const currentNominator = state.players[state.currentNominatorIndex];
+            const isNominator = currentNominator === state.playerName;
+            
+            let minBid, maxBid;
+            if (isMultipleBid) {
+                minBid = isNominator ? 1 : state.currentBid + 1;
+                maxBid = state.playerCurrency[state.playerName] + (state.currentBidder === state.playerName ? state.currentBid : 0);
+            } else {
+                minBid = 0;
+                maxBid = state.playerCurrency[state.playerName];
+            }
+
+            // Use minBid as default if slider doesn't exist yet
+            const currentSliderValue = document.getElementById('bidSlider')?.value || minBid;
+
+            app.innerHTML = `
+                <div class="auction-layout">
+                    <div class="auction-main-content">
+                        ${renderRosterPanel()}
+                        
+                        <div class="main-auction">
+                            ${isMultipleBid ? '' : '<div class="single-bid-indicator">🔒 Single-Bid Auction - Bids are hidden until time expires</div>'}
+                            
+                            <div class="current-item-display">
+                                <h2>⭐ ${state.currentItem}</h2>
+                                <div class="timer ${state.timeRemaining <= 10 ? 'warning' : ''}" id="timer">
+                                    ${state.timeRemaining}s
+                                </div>
+                                ${isMultipleBid ? `
+                                    <div class="current-bid">
+                                        Current Bid: ${state.currentBid} 💰<br>
+                                        <span style="font-size: 0.7em;">by ${state.currentBidder}</span>
+                                    </div>
+                                ` : `
+                                    <div class="current-bid" style="font-size: 1.3em;">
+                                        Place your bid - others cannot see it
+                                    </div>
+                                `}
+                            </div>
+
+                            <div class="bidding-controls">
+                                ${renderBiddingControls(minBid, maxBid, minBid, isMultipleBid)}
+                            </div>
+
+                            ${renderChat()}
+                        </div>
+
+                        ${renderChatPanel()}
+                    </div>
+                    
+                    ${renderFullRosterSection()}
+                </div>
+            `;
+        }
+
+        function renderBiddingControls(minBid, maxBid, currentValue, isMultipleBid) {
+            const canBid = isMultipleBid ? 
+                (state.currentBidder !== state.playerName && maxBid >= minBid) :
+                true;
+
+            const currentNominator = state.players[state.currentNominatorIndex];
+            const isNominator = currentNominator === state.playerName;
+
+            if (isMultipleBid && state.currentBidder === state.playerName) {
+                return `
+                    <p style="text-align: center; font-size: 1.2em; color: #48bb78; font-weight: 700;">
+                        You have the current bid! 🎉
+                    </p>
+                `;
+            }
+
+            if (isMultipleBid && maxBid < minBid) {
+                return `
+                    <p style="text-align: center; font-size: 1.1em; color: #e53e3e; font-weight: 600;">
+                        Insufficient currency to bid
+                    </p>
+                `;
+            }
+
+            let buttonText;
+            if (isMultipleBid) {
+                buttonText = `Bid ${currentValue} 💰`;
+            } else {
+                if (state.mySubmittedBid === null) {
+                    buttonText = `Bid ${currentValue} 💰`;
+                } else {
+                    buttonText = `Change bid to ${currentValue} 💰`;
+                }
+            }
+
+            return `
+                <div class="slider-container">
+                    <div class="slider-labels">
+                        <span>${minBid}</span>
+                        <span>${maxBid}</span>
+                    </div>
+                    <input type="range" id="bidSlider" min="${minBid}" max="${maxBid}" value="${currentValue}" 
+                           oninput="updateBidDisplay(this.value)">
+                    <div class="bid-amount-display" id="bidDisplay">${currentValue} 💰</div>
+                </div>
+
+                ${!isMultipleBid && state.mySubmittedBid !== null ? `
+                    <div class="submitted-bid-indicator">
+                        ✓ Current bid submitted: ${state.mySubmittedBid} 💰
+                    </div>
+                ` : ''}
+
+                <button onclick="placeBid()" style="width: 100%; font-size: 1.3em; padding: 16px;" ${!canBid ? 'disabled' : ''}>
+                    ${buttonText}
+                </button>
+            `;
+        }
+
+        function updateBidDisplay(value) {
+            const display = document.getElementById('bidDisplay');
+            if (display) {
+                display.textContent = `${value} 💰`;
+            }
+            
+            // Update button text
+            const button = document.querySelector('.bidding-controls button');
+            if (button && state.auctionType === 'single') {
+                if (state.mySubmittedBid === null) {
+                    button.textContent = `Bid ${value} 💰`;
+                } else {
+                    button.textContent = `Change bid to ${value} 💰`;
+                }
+            } else if (button && state.auctionType === 'multiple') {
+                button.textContent = `Bid ${value} 💰`;
+            }
+        }
+
+        function placeBid() {
+            const slider = document.getElementById('bidSlider');
+            const bidAmount = parseInt(slider.value);
+
+            if (state.auctionType === 'multiple') {
+                // Multiple-bid logic
+                const currentNominator = state.players[state.currentNominatorIndex];
+                const refund = state.currentBidder === state.playerName ? state.currentBid : 0;
+                
+                state.playerCurrency[state.playerName] += refund;
+                state.playerCurrency[state.playerName] -= bidAmount;
+                state.currentBid = bidAmount;
+                state.currentBidder = state.playerName;
+                
+                state.timeRemaining = state.bidTimer;
+                
+                addChatMessage('SYSTEM', `${state.playerName} bid ${bidAmount} 💰 on ⭐ ${state.currentItem}`);
+            } else {
+                // Single-bid logic
+                state.singleBidSubmissions[state.playerName] = bidAmount;
+                state.mySubmittedBid = bidAmount;
+                
+                addChatMessage('SYSTEM', `${state.playerName} has submitted a bid`);
+            }
+            
+            if (isFirebaseConfigured) {
+                syncToFirebase();
+            }
+            
+            renderBiddingScreen();
+        }
+
+        function resolveBidding() {
+            clearInterval(timerInterval);
+
+            if (state.auctionType === 'multiple') {
+                // Multiple-bid resolution
+                const winner = state.currentBidder;
+                const winningBid = state.currentBid;
+                
+                state.playerRosters[winner].push({
+                    item: state.currentItem,
+                    cost: winningBid
+                });
+
+                addChatMessage('SYSTEM', `${winner} won ⭐ ${state.currentItem} for ${winningBid} 💰!`);
+            } else {
+                // Single-bid resolution
+                let highestBid = -1;
+                let winners = [];
+
+                // Find highest bid(s)
+                Object.entries(state.singleBidSubmissions).forEach(([player, bid]) => {
+                    if (bid > highestBid) {
+                        highestBid = bid;
+                        winners = [player];
+                    } else if (bid === highestBid) {
+                        winners.push(player);
+                    }
+                });
+
+                // Handle no bids
+                if (winners.length === 0 || highestBid === 0) {
+                    addChatMessage('SYSTEM', `No valid bids for ⭐ ${state.currentItem}. Item goes unsold.`);
+                } else {
+                    // Break ties by nomination order
+                    let winner;
+                    if (winners.length === 1) {
+                        winner = winners[0];
+                    } else {
+                        // Find winner with latest position in nomination order
+                        let latestIndex = -1;
+                        winners.forEach(player => {
+                            const playerIndex = state.players.indexOf(player);
+                            if (playerIndex > latestIndex) {
+                                latestIndex = playerIndex;
+                                winner = player;
+                            }
+                        });
+                    }
+
+                    state.playerCurrency[winner] -= highestBid;
+                    state.playerRosters[winner].push({
+                        item: state.currentItem,
+                        cost: highestBid
+                    });
+
+                    // Reveal all bids
+                    let bidSummary = 'Bids revealed: ';
+                    Object.entries(state.singleBidSubmissions).forEach(([player, bid]) => {
+                        bidSummary += `${player}: ${bid} 💰, `;
+                    });
+                    addChatMessage('SYSTEM', bidSummary.slice(0, -2));
+                    addChatMessage('SYSTEM', `${winner} won ⭐ ${state.currentItem} for ${highestBid} 💰!`);
+                }
+            }
+
+            // Move to next nominator
+            state.currentNominatorIndex = (state.currentNominatorIndex + 1) % state.players.length;
+            
+            if (isFirebaseConfigured) {
+                syncToFirebase();
+            }
+            
+            setTimeout(() => {
+                showNominationPhase();
+            }, 2000);
+        }
+
+        // Timer
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                state.timeRemaining--;
+                const timerElement = document.getElementById('timer');
+                if (timerElement) {
+                    timerElement.textContent = `${state.timeRemaining}s`;
+                    if (state.timeRemaining <= 10) {
+                        timerElement.classList.add('warning');
+                    }
+                }
+
+                if (state.timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    if (state.currentPhase === 'nominating') {
+                        autoNominate();
+                    } else if (state.currentPhase === 'bidding') {
+                        resolveBidding();
+                    }
+                }
+            }, 1000);
+        }
+
+        // Roster panel
+        function renderRosterPanel() {
+            return `
+                <div class="roster-panel">
+                    <h3>Player Rosters</h3>
+                    ${state.players.map(player => `
+                        <div class="player-roster">
+                            <h4>${player}</h4>
+                            <div class="balance">${state.playerCurrency[player]} 💰</div>
+                            <div class="roster-items">
+                                ${state.playerRosters[player].length === 0 ? 
+                                    '<div style="color: #a0aec0; font-style: italic;">No items yet</div>' :
+                                    state.playerRosters[player].map(item => 
+                                        `<div>⭐ ${item.item} - ${item.cost} 💰</div>`
+                                    ).join('')
+                                }
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderFullRosterSection() {
+            return `
+                <div style="margin-top: 40px; padding: 30px; background: #f7fafc; border-radius: 16px;">
+                    <h2 style="text-align: center; color: #5a67d8; margin-bottom: 30px;">All Player Rosters</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        ${state.players.map(player => `
+                            <div style="background: white; border-radius: 12px; padding: 20px; border: 2px solid #e2e8f0;">
+                                <h3 style="color: #5a67d8; margin-bottom: 10px; font-size: 1.3em;">${player}</h3>
+                                <div style="color: #805ad5; font-weight: 700; margin-bottom: 15px; font-size: 1.1em;">
+                                    ${state.playerCurrency[player]} 💰
+                                </div>
+                                <div>
+                                    ${state.playerRosters[player].length === 0 ? 
+                                        '<div style="color: #a0aec0; font-style: italic;">No items yet</div>' :
+                                        state.playerRosters[player].map(item => 
+                                            `<div style="padding: 8px; background: #f7fafc; border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between;">
+                                                <span>⭐ ${item.item}</span>
+                                                <span style="color: #805ad5; font-weight: 700;">${item.cost} 💰</span>
+                                            </div>`
+                                        ).join('')
+                                    }
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Chat
+        function renderChat() {
+            return ''; // Chat is in side panel
+        }
+
+        function renderChatPanel() {
+            return `
+                <div class="chat-panel">
+                    <h3>Chat</h3>
+                    <div class="chat-messages" id="chatMessages">
+                        ${state.chatMessages.map(msg => `
+                            <div class="chat-message">
+                                <div class="sender">${msg.sender}</div>
+                                <div>${msg.message}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" placeholder="Type a message..." 
+                               onkeypress="if(event.key==='Enter') sendChat()">
+                        <button onclick="sendChat()">Send</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (message) {
+                addChatMessage(state.playerName, message);
+                input.value = '';
+                
+                if (isFirebaseConfigured) {
+                    syncToFirebase();
+                }
+                
+                // Re-render to update chat
+                if (state.currentPhase === 'bidding') {
+                    renderBiddingScreen();
+                } else if (state.currentPhase === 'nominating') {
+                    showNominationPhase();
+                }
+            }
+        }
+
+        function addChatMessage(sender, message) {
+            state.chatMessages.push({ sender, message });
+            
+            // Auto-scroll chat
+            setTimeout(() => {
+                const chatMessages = document.getElementById('chatMessages');
+                if (chatMessages) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }, 100);
+        }
+
+        // End auction
+        function endAuction() {
+            clearInterval(timerInterval);
+            state.currentPhase = 'ended';
+            
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="end-screen">
+                    <h2 style="text-align: center; font-size: 2.5em; color: #5a67d8; margin-bottom: 30px;">
+                        Auction Complete!
+                    </h2>
+
+                    <div class="end-screen-grid">
+                        ${state.players.map(player => `
+                            <div class="player-final-box">
+                                <h3>${player}</h3>
+                                <div style="margin-bottom: 15px; font-size: 1.1em; color: #805ad5; font-weight: 700;">
+                                    Remaining: ${state.playerCurrency[player]} 💰
+                                </div>
+                                <div>
+                                    ${state.playerRosters[player].length === 0 ?
+                                        '<div style="color: #a0aec0; font-style: italic; padding: 20px; text-align: center;">No items won</div>' :
+                                        state.playerRosters[player].map(item => `
+                                            <div class="final-roster-item">
+                                                <span class="item-name">⭐ ${item.item}</span>
+                                                <span class="item-cost">${item.cost} 💰</span>
+                                            </div>
+                                        `).join('')
+                                    }
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div style="text-align: center; margin-top: 40px;">
+                        <button onclick="location.reload()" style="font-size: 1.2em; padding: 16px 40px;">
+                            Start New Auction
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize app
+        init();
+    </script>
+</body>
+</html>
